@@ -1,0 +1,765 @@
+{
+    "name": "hdm_bqedw_account_pipeline_delta_load",
+    "description": "This pipeline is designed to fetch delta records",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "6.5.0",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 2048,
+            "virtualCores": 3
+        },
+        "driverResources": {
+            "memoryMB": 2048,
+            "virtualCores": 1
+        },
+        "connections": [
+            {
+                "from": "Teradata4",
+                "to": "AEAD_AnonymizationPlugin"
+            },
+            {
+                "from": "AEAD_AnonymizationPlugin",
+                "to": "DEAEAD_AnonymizationPlugin36"
+            },
+            {
+                "from": "DEAEAD_AnonymizationPlugin36",
+                "to": "BigQuery3"
+            },
+            {
+                "from": "BigQuery3",
+                "to": "log result"
+            },
+            {
+                "from": "DEAEAD_AnonymizationPlugin",
+                "to": "BigQuery316"
+            },
+            {
+                "from": "Cloud vault Td",
+                "to": "Cloud Vault BigQuery"
+            },
+            {
+                "from": "Cloud Vault BigQuery",
+                "to": "Cloud Vault AEAD"
+            },
+            {
+                "from": "Cloud Vault AEAD",
+                "to": "Cloud Vault Deterministic Aead"
+            },
+            {
+                "from": "Cloud Vault Deterministic Aead",
+                "to": "GCS Argument Setter"
+            },
+            {
+                "from": "BigQuery316",
+                "to": "log result19"
+            },
+            {
+                "from": "BigQuery",
+                "to": "log result1955"
+            },
+            {
+                "from": "Conditional2",
+                "to": "Teradata4",
+                "condition": "true"
+            },
+            {
+                "from": "Teradata420",
+                "to": "DEAEAD_AnonymizationPlugin"
+            },
+            {
+                "from": "Conditional2",
+                "to": "Teradata420",
+                "condition": "false"
+            },
+            {
+                "from": "Teradata42034",
+                "to": "BigQuery"
+            },
+            {
+                "from": "GCS Argument Setter",
+                "to": "Conditional219"
+            },
+            {
+                "from": "Conditional219",
+                "to": "Conditional2",
+                "condition": "false"
+            },
+            {
+                "from": "Conditional219",
+                "to": "Teradata42034",
+                "condition": "true"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": false,
+        "stages": [
+            {
+                "name": "Teradata4",
+                "plugin": {
+                    "name": "Teradata",
+                    "type": "batchsource",
+                    "label": "Teradata4",
+                    "artifact": {
+                        "name": "teradata-plugin",
+                        "version": "1.7.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "referenceName": "abc",
+                        "jdbcPluginName": "terajdbc4",
+                        "host": "${td_hostname}",
+                        "port": "${td_port}",
+                        "database": "${td_databasename}",
+                        "importQuery": "${query} ${condition}",
+                        "boundingQuery": "${boundingquery}",
+                        "splitBy": "${splitbyFieldName}",
+                        "numSplits": "${noofsplits}",
+                        "user": "${username}",
+                        "password": "hello278389",
+                        "connectionArguments": "CHARSET=UTF8;MAYBENULL=ON"
+                    }
+                },
+                "id": "Teradata4",
+                "type": "batchsource",
+                "label": "Teradata4",
+                "icon": "icon-teradata"
+            },
+            {
+                "name": "AEAD_AnonymizationPlugin",
+                "plugin": {
+                    "name": "AnonymizationPlugin",
+                    "type": "transform",
+                    "label": "AEAD_AnonymizationPlugin",
+                    "artifact": {
+                        "name": "vf-cis-cms-df-pg-aead-encrypt",
+                        "version": "1.0.2-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "schema": "abc",
+                        "categoryAdditionalData": "${aead_fieldAdditionalData}",
+                        "encryptFunction": "Aead",
+                        "categoryConfig": "${aead_categoryConfig}",
+                        "categoryKeyConfig": "${aead_categoryKeyConfig}",
+                        "anonymizationMode": "Encrypt"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "abc"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Teradata",
+                        "schema": ""
+                    }
+                ],
+                "id": "AEAD_AnonymizationPlugin",
+                "type": "transform",
+                "label": "AEAD_AnonymizationPlugin",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "DEAEAD_AnonymizationPlugin36",
+                "plugin": {
+                    "name": "AnonymizationPlugin",
+                    "type": "transform",
+                    "label": "DEAEAD_AnonymizationPlugin36",
+                    "artifact": {
+                        "name": "vf-cis-cms-df-pg-aead-encrypt",
+                        "version": "1.0.2-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "schema": "abc",
+                        "categoryAdditionalData": "${daeadfieldAdditionalData}",
+                        "encryptFunction": "Deterministic Aead",
+                        "categoryConfig": "${daead_field_category}",
+                        "categoryKeyConfig": "${daead_category_key}",
+                        "anonymizationMode": "Encrypt"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "abc"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "AEAD_AnonymizationPlugin",
+                        "schema": ""
+                    }
+                ],
+                "id": "DEAEAD_AnonymizationPlugin36",
+                "type": "transform",
+                "label": "DEAEAD_AnonymizationPlugin36",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "BigQuery3",
+                "plugin": {
+                    "name": "BigQueryTable",
+                    "type": "batchsink",
+                    "label": "BigQuery3",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "referenceName": "bq",
+                        "project": "${bq_project_id}",
+                        "datasetProject": "${bq_project_id}",
+                        "dataset": "${bq_dataset_name}",
+                        "table": "${target_table}",
+                        "bucket": "${temp_bucket_name}",
+                        "serviceAccountType": "JSON",
+                        "operation": "upsert",
+                        "allowSchemaRelaxation": "false",
+                        "location": "US",
+                        "createPartitionedTable": "false",
+                        "partitioningType": "TIME",
+                        "partitionFilterRequired": "false",
+                        "serviceAccountJSON": "${bq_service_account_json}",
+                        "relationTableKey": "${upsert_table_key}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "DEAEAD_AnonymizationPlugin36",
+                        "schema": ""
+                    }
+                ],
+                "id": "BigQuery3",
+                "type": "batchsink",
+                "label": "BigQuery3",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "log result",
+                "plugin": {
+                    "name": "BigQueryExecute",
+                    "type": "action",
+                    "label": "log result",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "project": "${bq_project_id}",
+                        "sql": "${bq_log_query}",
+                        "dialect": "standard",
+                        "mode": "interactive",
+                        "useCache": "false",
+                        "location": "${bq_dataset_location}",
+                        "rowAsArguments": "false",
+                        "serviceAccountType": "JSON",
+                        "serviceAccountJSON": "${bq_service_account_json}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "log-result",
+                "type": "action",
+                "label": "log result",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "DEAEAD_AnonymizationPlugin",
+                "plugin": {
+                    "name": "AnonymizationPlugin",
+                    "type": "transform",
+                    "label": "DEAEAD_AnonymizationPlugin",
+                    "artifact": {
+                        "name": "vf-cis-cms-df-pg-aead-encrypt",
+                        "version": "1.0.2-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "schema": "abc",
+                        "categoryAdditionalData": "${daeadfieldAdditionalData}",
+                        "encryptFunction": "Deterministic Aead",
+                        "categoryConfig": "${daead_field_category}",
+                        "categoryKeyConfig": "${daead_category_key}",
+                        "anonymizationMode": "Encrypt"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "abc"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Teradata83",
+                        "schema": ""
+                    }
+                ],
+                "id": "DEAEAD_AnonymizationPlugin",
+                "type": "transform",
+                "label": "DEAEAD_AnonymizationPlugin",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "BigQuery316",
+                "plugin": {
+                    "name": "BigQueryTable",
+                    "type": "batchsink",
+                    "label": "BigQuery316",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "project": "${bq_project_id}",
+                        "serviceAccountType": "JSON",
+                        "operation": "upsert",
+                        "allowSchemaRelaxation": "false",
+                        "location": "US",
+                        "createPartitionedTable": "false",
+                        "partitioningType": "TIME",
+                        "partitionFilterRequired": "false",
+                        "referenceName": "bqs",
+                        "datasetProject": "${bq_project_id}",
+                        "dataset": "${bq_dataset_name}",
+                        "table": "${target_table}",
+                        "bucket": "${temp_bucket_name}",
+                        "serviceAccountJSON": "${bq_service_account_json}",
+                        "relationTableKey": "${upsert_table_key}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "DEAEAD_AnonymizationPlugin",
+                        "schema": ""
+                    }
+                ],
+                "id": "BigQuery316",
+                "type": "batchsink",
+                "label": "BigQuery316",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "Cloud vault Td",
+                "plugin": {
+                    "name": "CloudVault",
+                    "type": "action",
+                    "label": "Cloud vault Td",
+                    "artifact": {
+                        "name": "cloudvault",
+                        "version": "2.0.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "vaultUrl": "${vault_url}",
+                        "vaultRole": "${secure(vault-role-id)}",
+                        "vaultCredentialPath": "${td_credential_path}",
+                        "proxyString": "${vault_proxy_string}",
+                        "fieldsMapping": "$.password:password",
+                        "secretID": "${secure(vault-secret-id)}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "Cloud-vault-Td",
+                "type": "action",
+                "label": "Cloud vault Td",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "Cloud Vault BigQuery",
+                "plugin": {
+                    "name": "CloudVault",
+                    "type": "action",
+                    "label": "Cloud Vault BigQuery",
+                    "artifact": {
+                        "name": "cloudvault",
+                        "version": "2.0.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "vaultUrl": "${vault_url}",
+                        "vaultRole": "${secure(vault-role-id)}",
+                        "vaultCredentialPath": "${bq_credential_path}",
+                        "proxyString": "${vault_proxy_string}",
+                        "fieldsMapping": "auth_provider_x509_cert_url:sa_auth_provider_cert,auth_uri:sa_auth_uri,client_email:sa_client_email,client_x509_cert_url:sa_client_cert,private_key:sa_private_key,private_key_id:sa_private_key_id,project_id:sa_project_id,token_uri:sa_token_uri,type:sa_type,client_id:sa_client_id",
+                        "secretID": "${secure(vault-secret-id)}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "Cloud-Vault-BigQuery",
+                "type": "action",
+                "label": "Cloud Vault BigQuery",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "Cloud Vault AEAD",
+                "plugin": {
+                    "name": "CloudVault",
+                    "type": "action",
+                    "label": "Cloud Vault AEAD",
+                    "artifact": {
+                        "name": "cloudvault",
+                        "version": "2.0.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "vaultUrl": "${vault_url}",
+                        "vaultRole": "${secure(vault-role-id)}",
+                        "vaultCredentialPath": "${aead_credential_path}",
+                        "proxyString": "${vault_proxy_string}",
+                        "fieldsMapping": "${aead_fields_mapping}",
+                        "secretID": "${secure(vault-secret-id)}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "Cloud-Vault-AEAD",
+                "type": "action",
+                "label": "Cloud Vault AEAD",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "Cloud Vault Deterministic Aead",
+                "plugin": {
+                    "name": "CloudVault",
+                    "type": "action",
+                    "label": "Cloud Vault Deterministic Aead",
+                    "artifact": {
+                        "name": "cloudvault",
+                        "version": "2.0.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "vaultUrl": "${vault_url}",
+                        "vaultRole": "${secure(vault-role-id)}",
+                        "vaultCredentialPath": "${daead_credential_path}",
+                        "proxyString": "${vault_proxy_string}",
+                        "fieldsMapping": "${daead_fields_mapping}",
+                        "secretID": "${secure(vault-secret-id)}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "Cloud-Vault-Deterministic-Aead",
+                "type": "action",
+                "label": "Cloud Vault Deterministic Aead",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "GCS Argument Setter",
+                "plugin": {
+                    "name": "GCSArgumentSetter",
+                    "type": "action",
+                    "label": "GCS Argument Setter",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "project": "${arg_setter_project_id}",
+                        "path": "${arg_setter_file_path}",
+                        "serviceAccountType": "JSON",
+                        "serviceAccountJSON": "{\"type\": \"${sa_type}\", \"project_id\": \"{sa_project_id}\", \"private_key_id\": \"${sa_private_key_id}\", \"private_key\": \"${sa_private_key}\", \"client_email\": \"${sa_client_email}\", \"client_id\": \"${sa_client_id}\", \"auth_uri\": \"${sa_auth_uri}\", \"token_uri\": \"${sa_token_uri}\", \"auth_provider_x509_cert_url\": \"${sa_auth_provider_cert}\", \"client_x509_cert_url\": \"${sa_client_cert}\"}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "GCS-Argument-Setter",
+                "type": "action",
+                "label": "GCS Argument Setter",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "log result19",
+                "plugin": {
+                    "name": "BigQueryExecute",
+                    "type": "action",
+                    "label": "log result19",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "project": "${bq_project_id}",
+                        "sql": "${bq_log_query}",
+                        "dialect": "standard",
+                        "mode": "interactive",
+                        "useCache": "false",
+                        "location": "${bq_dataset_location}",
+                        "rowAsArguments": "false",
+                        "serviceAccountType": "JSON",
+                        "serviceAccountJSON": "${bq_service_account_json}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "log-result19",
+                "type": "action",
+                "label": "log result19",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "BigQuery",
+                "plugin": {
+                    "name": "BigQueryTable",
+                    "type": "batchsink",
+                    "label": "BigQuery",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "referenceName": "bq",
+                        "project": "${bq_project_id}",
+                        "datasetProject": "${bq_project_id}",
+                        "dataset": "${bq_dataset_name}",
+                        "table": "${target_table}",
+                        "bucket": "${temp_bucket_name}",
+                        "serviceAccountType": "JSON",
+                        "operation": "upsert",
+                        "allowSchemaRelaxation": "false",
+                        "location": "US",
+                        "createPartitionedTable": "false",
+                        "partitioningType": "TIME",
+                        "partitionFilterRequired": "false",
+                        "serviceAccountJSON": "${bq_service_account_json}",
+                        "relationTableKey": "${upsert_table_key}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Teradata42034",
+                        "schema": ""
+                    }
+                ],
+                "id": "BigQuery",
+                "type": "batchsink",
+                "label": "BigQuery",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "log result1955",
+                "plugin": {
+                    "name": "BigQueryExecute",
+                    "type": "action",
+                    "label": "log result1955",
+                    "artifact": {
+                        "name": "google-cloud",
+                        "version": "0.18.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "project": "${bq_project_id}",
+                        "sql": "${bq_log_query}",
+                        "dialect": "standard",
+                        "mode": "interactive",
+                        "useCache": "false",
+                        "location": "${bq_dataset_location}",
+                        "rowAsArguments": "false",
+                        "serviceAccountType": "JSON",
+                        "serviceAccountJSON": "${bq_service_account_json}"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "id": "log-result1955",
+                "type": "action",
+                "label": "log result1955",
+                "icon": "fa-plug"
+            },
+            {
+                "name": "Conditional2",
+                "plugin": {
+                    "name": "Conditional",
+                    "type": "condition",
+                    "label": "Conditional2",
+                    "artifact": {
+                        "name": "condition-plugins",
+                        "version": "1.8.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "expression": "runtime['CDAP_Flag2'] =~ \"true\""
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "inputSchema": [],
+                "id": "Conditional2",
+                "type": "condition",
+                "label": "Conditional2",
+                "icon": "fa-question-circle-o"
+            },
+            {
+                "name": "Teradata420",
+                "plugin": {
+                    "name": "Teradata",
+                    "type": "batchsource",
+                    "label": "Teradata420",
+                    "artifact": {
+                        "name": "teradata-plugin",
+                        "version": "1.7.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "referenceName": "abc",
+                        "jdbcPluginName": "terajdbc4",
+                        "host": "${td_hostname}",
+                        "port": "${td_port}",
+                        "database": "${td_databasename}",
+                        "importQuery": "${query} ${condition}",
+                        "boundingQuery": "${boundingquery}",
+                        "splitBy": "${splitbyFieldName}",
+                        "numSplits": "${noofsplits}",
+                        "user": "${username}",
+                        "password": "${password}",
+                        "connectionArguments": "CHARSET=UTF8;MAYBENULL=ON"
+                    }
+                },
+                "id": "Teradata420",
+                "type": "batchsource",
+                "label": "Teradata420",
+                "icon": "icon-teradata"
+            },
+            {
+                "name": "Teradata42034",
+                "plugin": {
+                    "name": "Teradata",
+                    "type": "batchsource",
+                    "label": "Teradata42034",
+                    "artifact": {
+                        "name": "teradata-plugin",
+                        "version": "1.7.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "referenceName": "abc",
+                        "jdbcPluginName": "terajdbc4",
+                        "host": "${td_hostname}",
+                        "port": "${td_port}",
+                        "database": "${td_databasename}",
+                        "importQuery": "${query} ${condition}",
+                        "boundingQuery": "${boundingquery}",
+                        "splitBy": "${splitbyFieldName}",
+                        "numSplits": "${noofsplits}",
+                        "user": "${username}",
+                        "password": "${password}",
+                        "connectionArguments": "CHARSET=UTF8;MAYBENULL=ON"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody"
+                    }
+                ],
+                "id": "Teradata42034",
+                "type": "batchsource",
+                "label": "Teradata42034",
+                "icon": "icon-teradata"
+            },
+            {
+                "name": "Conditional219",
+                "plugin": {
+                    "name": "Conditional",
+                    "type": "condition",
+                    "label": "Conditional219",
+                    "artifact": {
+                        "name": "condition-plugins",
+                        "version": "1.8.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "expression": "runtime['CDAP_Flag1'] =~ \"true\""
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "inputSchema": [],
+                "id": "Conditional219",
+                "type": "condition",
+                "label": "Conditional219",
+                "icon": "fa-question-circle-o"
+            }
+        ],
+        "schedule": "0 1 */1 * *",
+        "engine": "spark",
+        "numOfRecordsPreview": 100,
+        "description": "This pipeline is designed to fetch delta records",
+        "maxConcurrentRuns": 1
+    }
+}
