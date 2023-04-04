@@ -1,11 +1,10 @@
-name: "CodeQL"
+name: "CodeQL Analysis"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+    branches: [ main ]
   schedule:
     - cron: '* * * * *'  # Run at 12:00 AM UTC every day
 
@@ -13,34 +12,32 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'java' ]
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    # Initializes the CodeQL tools for scanning.
+    - name: Set up Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.11
+
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+
+    - name: Build with Maven
+      run: mvn clean compile
+
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v1
       with:
-        languages: ${{ matrix.language }}
+        languages: java
 
-    # Build the Java project
-    - name: Build
-      run: |
-        ./gradlew build
+    - name: Autobuild with CodeQL
+      uses: github/codeql-action/autobuild@v1
 
-    # Perform CodeQL analysis
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-      with:
-        # Set the analysis to be run on the Java language
-        language: "java"
+      uses: github/codeql-action/analyze@v1
